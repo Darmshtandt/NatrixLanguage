@@ -1,0 +1,50 @@
+/*
+print("//============================================\n");
+print("// TEST 1: if, else, else if statements\n");
+print("// \tif1\n");
+print("// \tfinally1\n");
+print("//============================================\n");
+
+{
+	var Fibbo = (2 + 2) * 2;
+	if (((Fibbo * 2) - 8) == 8)
+		print("if1\n");
+	else {
+		print("else1\n");
+		if (false)
+			print("if2\n");
+		else if (false)
+			print("else if2\n");
+		else
+			print("else2\n");
+		print("finally2\n");
+	}
+	print("finally1\n");
+}
+
+print("\n");
+
+print("//============================================\n");
+print("// TEST 2: Scopes\n");
+print("// \t42\n");
+print("//============================================\n");
+{
+	var var1 = 42;
+	{
+		var var1 = 69;
+	}
+	print(var1);
+}
+
+
+print("\n");
+
+print("//============================================\n");
+print("// TEST 3: Scopes\n");
+print("// \t4444\n");
+print("// \t2222\n");
+print("//============================================\n");
+*/
+for (var i = 0; i != 4; ++i) {
+	print("4\n")
+}

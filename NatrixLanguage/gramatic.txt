@@ -1,0 +1,51 @@
+Prioruty    Operator
+	1		a, (), a++, a-- [a(), a[]]
+	2		++a, --a, +a, -a, !a, ~a
+	3		a*b, a/b, a%b
+	4		a+b, a-b
+	5		[<<, >>]
+	6		[<, <=, =>, >]
+	7		[==, !=]
+	8		&
+	9		^
+	10		|
+	11		&&
+	12		||
+	13		= [+=, -=, *=, /=, %=, <<=, >>=, &=, ^=, !=]
+
+
+? - 0 or 1
+* - 0+
++ - 1+
+
+Code ::= Symbol | Var | If | For | While | Func | Return
+CodeBlock ::= '{' Code '}'
+AnyCode ::= Code | CodeBlock
+
+TypeValue = IntVal | FloatVal | BoolVal | StrVal
+Symbol ::= Name ('(' Arguments ')')?
+Value ::= TypeValue | Symbol | Operator_rvalue
+Arguments ::= (Var (',' Var)*) | \0
+
+Operator ::= Operator_assignment
+Operator_assignment ::= (Name '=')? Operator_rvalue
+Operator_rvalue = Operator_logicalor
+Operator_logicalor ::= Operator_logicaland ('||' Operator_logicaland)*
+Operator_logicaland ::= Operator_bitor ('&&' Operator_bitor)*
+Operator_bitor ::= Operator_bitxor ('|' Operator_bitxor)*
+Operator_bitxor ::= Operator_bitand ('^' Operator_bitand)*
+Operator_bitand ::= Operator_eq ('&' Operator_eq)*
+Operator_eq ::= Operator_ltgt
+Operator_ltgt ::= Operator_bitshift
+Operator_bitshift ::= Operator_unary
+Operator_unary ::= Operator_mult (('+' | '-') Operator_mult)*
+Operator_mult ::= Operator_prefix (('*' | '/' | '%') Operator_prefix)*
+Operator_prefix ::= ('++' | '--' | '+' | '-' | '!' | '~')? Operator_primary
+Operator_primary ::= Value | '(' Operator ')' | Operator ('++' | '--')
+
+Var ::= 'var' Name ('=' Operator_rvalue)? ';'
+If ::= 'if' '(' Operator ')' AnyCode ('else' AnyCode)?
+For ::= 'for' '(' Var ';' Operator ';' Expression ')' AnyCode | '(;' Operator ';' Expression ')' AnyCode
+While ::= 'while' '(' Operator ')' AnyCode
+Func ::= 'func' Name '(' Arguments ')' CodeBlock
+Return ::= 'return' Value ';'
