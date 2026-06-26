@@ -77,8 +77,7 @@ var b = 5;
 ## Functions
 
 ```natrix
-func Sum(a, b)
-{
+func Sum(a, b) {
     return a + b;
 }
 ```

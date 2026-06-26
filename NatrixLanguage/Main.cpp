@@ -59,7 +59,7 @@ int main() {
 		pLexer = std::make_unique<Lexer>(code);
 		pParser = std::make_unique<Parser>(*pLexer);
 
-		pParser->GetScopeStack().CreateFunction("print", [] (const Parser::Args& args) {
+		pParser->GetScopeStack().CreateFunction("print", [] (const NppFuncArgs& args) {
 			if (args.size() != 1)
 				throw SyntaxError(PERROR_NUMBER_ARGUMENTS);
 
@@ -95,7 +95,7 @@ int main() {
 			pParser->GetTextPosition().Charaster);
 	}
 
-	printf("\nend\n");
+	printf("\n>>> END <<<\n");
 	getchar();
 	return 0;
 }
