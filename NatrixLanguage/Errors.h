@@ -14,11 +14,14 @@ enum {
 
 	PERROR_INVALID_SYNTAX = PARSER_ERROR,
 	PERROR_NUMBER_ARGUMENTS,
-	PERROR_UNKOWN_TOKEN,
 	PERROR_CANNOT_TO_RVALUE,
 	PERROR_OPERATOR_NOT_APPLICABLE,
 	PERROR_INCORRECT_VALUE,
+	PERROR_UNKOWN_TOKEN,
 	PERROR_UNKOWN_TYPE,
+	PERROR_UNKOWN_VALUE,
+	PERROR_SYMBOL_NOT_EXISTS,
+	PERROR_MISSING_CODEBRACKET_R,
 };
 
 inline static const std::unordered_map<ErrorCode, char const* const> g_ErrorMap = {
@@ -28,11 +31,14 @@ inline static const std::unordered_map<ErrorCode, char const* const> g_ErrorMap 
 
 	{ PERROR_INVALID_SYNTAX, "Invalid syntax" },
 	{ PERROR_NUMBER_ARGUMENTS, "Incorrect number of arguments" },
-	{ PERROR_UNKOWN_TOKEN, "Unknown token" },
 	{ PERROR_CANNOT_TO_RVALUE, "Cannot apply operator to rvalue" },
 	{ PERROR_OPERATOR_NOT_APPLICABLE, "The operator is not applicable to this value" },
 	{ PERROR_INCORRECT_VALUE, "Incorrect value" },
+	{ PERROR_UNKOWN_TOKEN, "Unknown token" },
 	{ PERROR_UNKOWN_TYPE, "Unknown type" },
+	{ PERROR_UNKOWN_VALUE, "Unknown value" },
+	{ PERROR_SYMBOL_NOT_EXISTS, "Symbol not exists" },
+	{ PERROR_MISSING_CODEBRACKET_R, "Missing character '}'" },
 };
 
 __forceinline char const* const GetErrorText(ErrorCode code) noexcept {
@@ -48,9 +54,9 @@ public:
 		Code(code)
 	{
 	}
-	explicit SyntaxError(char const* const msg) :
+	SyntaxError(ErrorCode code, char const* const msg) :
 		std::exception(msg),
-		Code(0)
+		Code(code)
 	{
 	}
 

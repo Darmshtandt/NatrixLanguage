@@ -59,7 +59,7 @@ private:
 				if constexpr (std::is_same_v<A, B> && std::is_same_v<A, std::string>)
 					return op(x, y);
 
-				throw SyntaxError("operator not applicable");
+				throw SyntaxError(PERROR_OPERATOR_NOT_APPLICABLE);
 			},
 			a, b);
 	}
@@ -74,7 +74,7 @@ private:
 				if constexpr (std::is_arithmetic_v<A> && std::is_arithmetic_v<B>)
 					return op(x, y);
 
-				throw SyntaxError("operator not applicable");
+				throw SyntaxError(PERROR_OPERATOR_NOT_APPLICABLE);
 			},
 			a, b);
 	}
@@ -87,7 +87,15 @@ private:
 			if constexpr (std::is_arithmetic_v<T>)
 				return op(x);
 
-			throw SyntaxError("operator not applicable");
+			throw SyntaxError(PERROR_OPERATOR_NOT_APPLICABLE);
 			}, v);
 	}
+};
+
+struct VariableStruct final {
+	VariableStruct() noexcept = default;
+	VariableStruct(std::string name, NppValue value) noexcept;
+
+	NppValue ValueStruct;
+	std::string VarName;
 };

@@ -1,4 +1,7 @@
 #include "SymbolTable.h"
+
+#include <cassert>
+
 #include "Errors.h"
 
 #include <stdexcept>
@@ -10,21 +13,27 @@ VariableStruct1::VariableStruct1(std::string name, NppValue value) noexcept :
 {
 }
 
+
+SymbolTable::SymbolTable(SymbolTable&& table) noexcept:
+	m_VarMap(std::move(table.m_VarMap)),
+	m_ImportedFuncMap(std::move(table.m_ImportedFuncMap)) {
+}
+
 void SymbolTable::CreateVar(const std::string& name) {
 	if (m_VarMap.contains(name))
-		throw SyntaxError(("Variable \"" + name + "\" already exists").c_str());
+		throw SyntaxError(PERROR_SYMBOL_NOT_EXISTS, ("Variable \"" + name + "\" already exists").c_str());
 
 	m_VarMap[name];
 }
 void SymbolTable::CreateVar(const std::string& name, const NppValue& value) {
 	if (m_VarMap.contains(name))
-		throw SyntaxError(("Variable \"" + name + "\" already exists").c_str());
+		throw SyntaxError(PERROR_SYMBOL_NOT_EXISTS, ("Variable \"" + name + "\" already exists").c_str());
 	m_VarMap[name] = value;
 }
 
 void SymbolTable::SetVarValue(const std::string& name, const NppValue& value) {
 	if (!m_VarMap.contains(name))
-		throw SyntaxError(("Variable \"" + name + "\" not exists").c_str());
+		throw SyntaxError(PERROR_SYMBOL_NOT_EXISTS, ("Variable \"" + name + "\" not exists").c_str());
 	m_VarMap[name] = value;
 }
 
@@ -39,19 +48,23 @@ void SymbolTable::CreateFunction(std::string name, NppFunc func) {
 	if (!func)
 		throw std::runtime_error("Incorrect function");
 
-	if (m_FuncMap.contains(name))
-		throw SyntaxError(("Function \"" + name + "\" already exists").c_str());
-	m_FuncMap[std::move(name)] = std::move(func);
+	if (m_ImportedFuncMap.contains(name))
+		throw SyntaxError(PERROR_SYMBOL_NOT_EXISTS, ("Function \"" + name + "\" already exists").c_str());
+	m_ImportedFuncMap[std::move(name)] = std::move(func);
+}
+
+void SymbolTable::CreateFunction(std::string name, NppFuncArgs&& args, std::vector<Token>&& body) {
+	assert(0);
 }
 
 VariableStruct1 SymbolTable::CallFunction(const std::string& name, const NppFuncArgs& args) {
-	if (!m_FuncMap.contains(name))
-		throw SyntaxError(("Unknown function: \"" + name + "\"").c_str());
-	return m_FuncMap[name](args);
+	if (!m_ImportedFuncMap.contains(name))
+		throw SyntaxError(PERROR_SYMBOL_NOT_EXISTS, ("Unknown function: \"" + name + "\"").c_str());
+	return m_ImportedFuncMap[name](args);
 }
 
 NppFunc* SymbolTable::GetFunctionPtr(const std::string& name) {
-	if (!m_FuncMap.contains(name))
+	if (!m_ImportedFuncMap.contains(name))
 		return nullptr;
-	return &m_FuncMap[name];
+	return &m_ImportedFuncMap[name];
 }

@@ -20,12 +20,12 @@ void Parser::Consume(TokenType type) {
 	if (m_CurrentToken.Type != type) {
 		std::string errorMsg;
 		errorMsg = "The token \"";
-		errorMsg += std::to_string(static_cast<int>(type));
+		errorMsg += LanguageMap::TokenToString(type);
 		errorMsg += "\" was expected, but \"";
-		errorMsg += std::to_string(static_cast<int>(m_CurrentToken.Type));
+		errorMsg += LanguageMap::TokenToString(m_CurrentToken.Type);
 		errorMsg += "\" was found.";
 
-		throw SyntaxError(errorMsg.c_str());
+		throw SyntaxError(PERROR_INVALID_SYNTAX, errorMsg.c_str());
 	}
 
 	Next();
@@ -75,8 +75,8 @@ void Parser::CodeBlock() {
 	Consume(TokenType::CodeBlockR);
 }
 
-// Code ::= (Var | Symbol) ';' | If | For | While
-// | Func | Return
+// Code ::= (Var | Symbol) ';' | If | For | While | Func
+// | Return
 void Parser::Code() {
 	switch (m_CurrentToken.Type) {
 	case TokenType::Var:
@@ -97,14 +97,17 @@ void Parser::Code() {
 
 	case TokenType::While:
 		return While();
+
+	case TokenType::Func:
+		return Func();
 	}
 
 	std::string errorMsg;
 	errorMsg = "Unknown token: \"";
-	errorMsg += std::to_string(static_cast<int>(m_CurrentToken.Type));
+	errorMsg += LanguageMap::TokenToString(m_CurrentToken.Type);
 	errorMsg += "\"";
 
-	throw SyntaxError(errorMsg.c_str());
+	throw SyntaxError(PERROR_UNKOWN_TOKEN, errorMsg.c_str());
 }
 
 
@@ -122,6 +125,50 @@ void Parser::Var() {
 	else {
 		m_ScopeStack.CreateVar(varName);
 	}
+}
+
+// Func :: = 'func' Symbol '(' Arguments ')' CodeBlock
+void Parser::Func() {
+	Consume(TokenType::Func);
+
+	const std::string funcName = m_CurrentToken.Value;
+	Consume(TokenType::Symbol);
+
+	Consume(TokenType::BracketL);
+	const NppFuncArgs funcArgs = PresentArguments();
+	Consume(TokenType::BracketR);
+
+	const size_t bodySeek = m_Lexer.GetSeek();
+	auto funcBody = [this, funcArgs, bodySeek] (const NppFuncArgs& args) {
+		if (funcArgs.size() != args.size())
+			throw SyntaxError(PERROR_NUMBER_ARGUMENTS);
+
+		const size_t lastSeek = m_Lexer.GetSeek();
+		m_CurrentToken = m_Lexer.SetSeek(bodySeek);
+		CodeBlock();
+		m_CurrentToken = m_Lexer.SetSeek(lastSeek);
+
+		return VariableStruct1("", NppValue());
+		};
+
+	m_ScopeStack.CreateFunction(funcName, funcBody);
+
+	Consume(TokenType::CodeBlockL);
+
+	int blocks = 1;
+	while (m_CurrentToken.Type != TokenType::_EOF) {
+		if (m_CurrentToken.Type == TokenType::CodeBlockL)
+			++blocks;
+		else if (m_CurrentToken.Type == TokenType::CodeBlockR)
+			--blocks;
+
+		Next();
+		if (blocks == 0)
+			break;
+	}
+
+	if (blocks != 0)
+		throw SyntaxError(PERROR_MISSING_CODEBRACKET_R);
 }
 
 // If ::= ('if' '(' Operator ')' AnyCode ('else' AnyCode)?)*
@@ -213,18 +260,20 @@ void Parser::For() {
 	const size_t beginCycleSeek = m_Lexer.GetSeek();
 	while (isTrue) {
 		AnyCode();
+		if (m_CurrentToken.Type == TokenType::_EOF)
+			break;
 
 		const size_t endCycleSeek = m_Lexer.GetSeek();
 
-		m_Lexer.SetSeek(expressionSeek);
+		m_CurrentToken = m_Lexer.SetSeek(expressionSeek);
 		if (m_CurrentToken.Type != TokenType::Semicolon)
 			Operator();
 
-		m_Lexer.SetSeek(conditionSeek);
+		m_CurrentToken = m_Lexer.SetSeek(conditionSeek);
 		if (m_CurrentToken.Type != TokenType::Semicolon)
 			isTrue = Operator().ValueStruct.IsTrue();
 
-		m_Lexer.SetSeek(isTrue ? beginCycleSeek : endCycleSeek);
+		m_CurrentToken = m_Lexer.SetSeek(isTrue ? beginCycleSeek : endCycleSeek);
 	}
 
 	m_ScopeStack.ReleaseLocalScope();
@@ -264,12 +313,12 @@ VariableStruct1 Parser::TypeValue() {
 
 	std::string errorMsg;
 	errorMsg = "Unknown value: Token \"";
-	errorMsg += std::to_string(static_cast<int>(m_CurrentToken.Type));
+	errorMsg += LanguageMap::TokenToString(m_CurrentToken.Type);
 	errorMsg += "\"; value \"";
 	errorMsg += m_CurrentToken.Value;
 	errorMsg += "\"";
 
-	throw SyntaxError(errorMsg.c_str());
+	throw SyntaxError(PERROR_UNKOWN_VALUE, errorMsg.c_str());
 }
 
 // Symbol ::= Symbol ('(' PresentArguments ')')?

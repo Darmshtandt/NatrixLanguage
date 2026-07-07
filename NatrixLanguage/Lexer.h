@@ -8,6 +8,7 @@ enum class TokenType : unsigned {
 	Semicolon,
 	Symbol,
 	Comma,
+
 	SingleComment,
 	MultiComment,
 
@@ -64,20 +65,24 @@ enum class TokenType : unsigned {
 };
 
 struct LanguageMap {
+	[[nodiscard]] static std::string TokenToString(TokenType type);
+
+	static const std::unordered_map<std::string, TokenType> Other;
 	static const std::unordered_map<std::string, TokenType> Operators;
 	static const std::unordered_map<std::string, TokenType> Keywords;
 };
 
 struct TextPosition final {
-	int Line = 1;
-	int Charaster = 1;
+	size_t Line = 1;
+	size_t Charaster = 1;
 };
 
 struct Token final {
-	explicit Token(TokenType type, std::string value, TextPosition position) noexcept;
+	Token(TokenType type, std::string value, TextPosition position, size_t length) noexcept;
 
 	TokenType Type;
 	std::string Value;
+	size_t Length = 0;
 	TextPosition Position;
 };
 
@@ -95,20 +100,25 @@ public:
 	TextPosition GetTextPosition() const noexcept;
 	size_t GetSeek() const noexcept;
 
-	void SetSeek(size_t seek) noexcept;
+	Token SetSeek(size_t seek) noexcept;
 
 private:
+	size_t m_MaxOperatorLength = 0;
+	std::unordered_set<std::string> m_Operators;
 	std::unordered_set<char> m_OperatorChars;
 	std::string m_InputText;
 	std::vector<size_t> m_NewLineSeeks;
 	size_t m_Seek = SEEK_EOF;
+	size_t m_LastTokenSize = 0;
 
 private:
 	void Advance() noexcept;
+	void Advance(size_t offset) noexcept;
 	char GetNextChar() noexcept;
 	char GetCurrentChar() const noexcept;
+	char Peek(size_t offset) const noexcept;
 
-	Token CreateToken(TokenType type, std::string value);
+	Token CreateToken(TokenType type, std::string value, size_t length);
 
 	std::string ParseString(char chr);
 	std::string ParseOperator(char chr);

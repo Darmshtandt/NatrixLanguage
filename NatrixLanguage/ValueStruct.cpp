@@ -66,7 +66,7 @@ NppValue& NppValue::operator %= (const NppValue& other) {
 			using B = std::decay_t<decltype(y)>;
 
 			if constexpr (!std::is_arithmetic_v<A> || !std::is_arithmetic_v<B>)
-				throw SyntaxError("operator not applicable");
+				throw SyntaxError(PERROR_OPERATOR_NOT_APPLICABLE);
 			else if constexpr (std::is_integral_v<A> && std::is_integral_v<B>)
 				return x % y;
 			else if constexpr (std::is_integral_v<A>)
@@ -121,7 +121,7 @@ NppValue NppValue::operator ~ () const {
 		using T = std::decay_t<decltype(x)>;
 
 		if constexpr (!std::is_integral_v<T>)
-			throw SyntaxError("operator not applicable");
+			throw SyntaxError(PERROR_OPERATOR_NOT_APPLICABLE);
 		else
 			return ~x;
 		}, m_Value);

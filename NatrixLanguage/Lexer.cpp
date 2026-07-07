@@ -2,6 +2,7 @@
 #include "Errors.h"
 
 #include <cassert>
+#include <format>
 
 std::string Unescape(const std::string& text) {
 	std::string result;
@@ -28,12 +29,35 @@ std::string Unescape(const std::string& text) {
 	return result;
 }
 
-Token::Token(TokenType type, std::string value, TextPosition position) noexcept :
+Token::Token(TokenType type, std::string value, TextPosition position, size_t length) noexcept :
 	Type(type),
 	Value(std::move(value)),
-	Position(position)
+	Position(position),
+	Length(length)
 {
 }
+
+std::string LanguageMap::TokenToString(TokenType type) {
+	const std::unordered_map<std::string, TokenType>* maps[] = {
+		&Other, &Operators, &Keywords
+	};
+
+	for (const auto& map : maps) {
+		for (const auto& [name, code] : *map) {
+			if (type == code)
+				return name;
+		}
+	}
+	return std::format("[code: {}]", static_cast<int>(type));
+}
+
+
+const std::unordered_map<std::string, TokenType> LanguageMap::Other = {
+	{ ";", TokenType::Semicolon },
+	{ ",", TokenType::Symbol },
+	{ ".", TokenType::Comma },
+	{ "EOF", TokenType::_EOF },
+};
 
 const std::unordered_map<std::string, TokenType> LanguageMap::Operators = {
 	{ "+", TokenType::Add },
@@ -95,12 +119,18 @@ Lexer::Lexer(std::string inputText) :
 	}
 
 	for (auto [op, _] : LanguageMap::Operators) {
+		if (m_MaxOperatorLength < op.length())
+			m_MaxOperatorLength = op.length();
+
+		m_Operators.insert(op);
 		for (char chr : op)
 			m_OperatorChars.insert(chr);
 	}
 }
 
 Token Lexer::GetNextToken() {
+	const size_t tokenSeek = m_Seek;
+
 	char chr = GetCurrentChar();
 	while (chr) {
 		if (isspace(chr)) {
@@ -112,9 +142,9 @@ Token Lexer::GetNextToken() {
 			const std::string part1 = ParseNumber(chr);
 			if (chr == '.') {
 				const std::string part2 = ParseNumber(GetNextChar());
-				return CreateToken(TokenType::FloatVal, part1 + '.' + part2);
+				return CreateToken(TokenType::FloatVal, part1 + '.' + part2, m_Seek - tokenSeek);
 			}
-			return CreateToken(TokenType::IntVal, part1);
+			return CreateToken(TokenType::IntVal, part1, m_Seek - tokenSeek);
 		}
 
 		if (IsCorrectForName(chr)) {
@@ -122,23 +152,23 @@ Token Lexer::GetNextToken() {
 
 			if (LanguageMap::Keywords.contains(name)) {
 				if (name == "true" || name == "false")
-					return CreateToken(LanguageMap::Keywords.at(name), name);
-				return CreateToken(LanguageMap::Keywords.at(name), "");
+					return CreateToken(LanguageMap::Keywords.at(name), name, m_Seek - tokenSeek);
+				return CreateToken(LanguageMap::Keywords.at(name), "", m_Seek - tokenSeek);
 			}
-			return CreateToken(TokenType::Symbol, name);
+			return CreateToken(TokenType::Symbol, name, m_Seek - tokenSeek);
 		}
 
 		switch (chr) {
 		case ';':
 			Advance();
-			return CreateToken(TokenType::Semicolon, "");
+			return CreateToken(TokenType::Semicolon, "", m_Seek - tokenSeek);
 
 		case ',':
 			Advance();
-			return CreateToken(TokenType::Comma, "");
+			return CreateToken(TokenType::Comma, "", m_Seek - tokenSeek);
 
 		case '"':
-			return CreateToken(TokenType::StrVal, ParseString(chr));
+			return CreateToken(TokenType::StrVal, ParseString(chr), m_Seek - tokenSeek);
 		}
 
 		if (m_OperatorChars.contains(chr)) {
@@ -173,13 +203,13 @@ Token Lexer::GetNextToken() {
 			}
 
 			if (!op.empty())
-				return CreateToken(LanguageMap::Operators.at(op), "");
+				return CreateToken(LanguageMap::Operators.at(op), "", m_Seek - tokenSeek);
 		}
 
 		throw SyntaxError(LERROR_INVALID_SYNTAX);
 	}
 
-	return CreateToken(TokenType::_EOF, "");
+	return CreateToken(TokenType::_EOF, "", m_Seek - tokenSeek);
 }
 
 TextPosition Lexer::GetTextPosition() const noexcept {
@@ -206,16 +236,17 @@ TextPosition Lexer::GetTextPosition() const noexcept {
 }
 
 size_t Lexer::GetSeek() const noexcept {
-	return m_Seek;
+	return m_Seek - m_LastTokenSize;
 }
 
-void Lexer::SetSeek(size_t seek) noexcept {
+Token Lexer::SetSeek(size_t seek) noexcept {
 	if (seek >= m_InputText.length()) {
 		m_Seek = SEEK_EOF;
-		return;
+		return GetNextToken();
 	}
 
 	m_Seek = (seek > 0) ? seek : SEEK_START;
+	return GetNextToken();
 }
 
 void Lexer::Advance() noexcept {
@@ -223,6 +254,14 @@ void Lexer::Advance() noexcept {
 		return;
 
 	++m_Seek;
+	if (m_Seek >= m_InputText.length())
+		m_Seek = SEEK_EOF;
+}
+void Lexer::Advance(size_t offset) noexcept {
+	if (m_Seek == SEEK_EOF)
+		return;
+
+	m_Seek += offset;
 	if (m_Seek >= m_InputText.length())
 		m_Seek = SEEK_EOF;
 }
@@ -241,8 +280,15 @@ char Lexer::GetCurrentChar() const noexcept {
 	return m_InputText[m_Seek];
 }
 
-Token Lexer::CreateToken(TokenType type, std::string value) {
-	return Token(type, std::move(value), GetTextPosition());
+char Lexer::Peek(size_t offset) const noexcept {
+	if (m_Seek == SEEK_EOF || m_Seek + offset >= m_InputText.length())
+		return '\0';
+	return m_InputText[m_Seek + offset];
+}
+
+Token Lexer::CreateToken(TokenType type, std::string value, size_t length) {
+	m_LastTokenSize = length;
+	return Token(type, std::move(value), GetTextPosition(), length);
 }
 
 std::string Lexer::ParseString(char chr) {
@@ -259,12 +305,28 @@ std::string Lexer::ParseString(char chr) {
 std::string Lexer::ParseOperator(char chr) {
 	assert(m_OperatorChars.contains(chr));
 
-	std::string op;
-	while (chr && m_OperatorChars.contains(chr)) {
-		op += chr;
-		chr = GetNextChar();
+	std::string text;
+	for (size_t i = 0; i < m_MaxOperatorLength; ++i) {
+		const char symbol = Peek(i);
+		if (symbol == '\0')
+			break;
+
+		text += symbol;
 	}
-	return op;
+
+	while (!text.empty()) {
+		bool isFinded = false;
+		for (const auto& [op, _] : LanguageMap::Operators) {
+			if (text == op) {
+				Advance(text.length());
+				return text;
+			}
+		}
+
+		text.pop_back();
+	}
+
+	return "";
 }
 
 std::string Lexer::ParseName(char chr) {
@@ -283,7 +345,6 @@ std::string Lexer::ParseNumber(char chr) {
 		throw SyntaxError(LERROR_INCORRECT_VALUE);
 
 	std::string number;
-	bool hasDot = false;
 	while (chr && isdigit(chr)) {
 		number += chr;
 		chr = GetNextChar();

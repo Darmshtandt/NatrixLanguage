@@ -14,6 +14,7 @@ public:
 	void Code();
 
 	void Var();
+	void Func();
 	void If();
 	void While();
 	void For();
