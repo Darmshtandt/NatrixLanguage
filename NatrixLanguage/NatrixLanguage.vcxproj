@@ -135,15 +135,18 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="ScopeStack.cpp" />
+    <ClCompile Include="ScopeTree.cpp" />
     <ClCompile Include="SymbolTable.cpp" />
     <ClCompile Include="ValueStruct.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CallStack.h" />
     <ClInclude Include="Errors.h" />
+    <ClInclude Include="FuncStruct.h" />
     <ClInclude Include="Lexer.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="ScopeStack.h" />
+    <ClInclude Include="ScopeTree.h" />
     <ClInclude Include="SymbolTable.h" />
     <ClInclude Include="ValueStruct.h" />
   </ItemGroup>

@@ -83,10 +83,8 @@ private:
 	static Value UnaryOperation(const Value& v, Op op) {
 		return std::visit([&] (auto&& x) -> Value {
 			using T = std::decay_t<decltype(x)>;
-
 			if constexpr (std::is_arithmetic_v<T>)
 				return op(x);
-
 			throw SyntaxError(PERROR_OPERATOR_NOT_APPLICABLE);
 			}, v);
 	}

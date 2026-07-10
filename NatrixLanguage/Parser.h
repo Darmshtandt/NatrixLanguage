@@ -19,21 +19,21 @@ public:
 	void While();
 	void For();
 
-	VariableStruct1 Value();
-	VariableStruct1 TypeValue();
-	VariableStruct1 Symbol();
+	VariableStruct Value();
+	VariableStruct TypeValue();
+	VariableStruct Symbol();
 	NppFuncArgs PresentArguments();
 
-	VariableStruct1 Operator();
-	VariableStruct1 Operator_Assignment();
-	VariableStruct1 Operator_rValue();
+	VariableStruct Operator();
+	VariableStruct Operator_Assignment();
+	VariableStruct Operator_rValue();
 
-	VariableStruct1 Operator_Equality();
+	VariableStruct Operator_Equality();
 
-	VariableStruct1 Operator_Unary();
-	VariableStruct1 Operator_MultDivMod();
-	VariableStruct1 Operator_Prefix();
-	VariableStruct1 Operator_Primary();
+	VariableStruct Operator_Unary();
+	VariableStruct Operator_MultDivMod();
+	VariableStruct Operator_Prefix();
+	VariableStruct Operator_Primary();
 
 	void SkipAnyCode();
 	void SkipCodeBlock();

@@ -143,3 +143,10 @@ NppValue& NppValue::operator -- () {
 const NppValue::Value& NppValue::Get() const noexcept {
 	return m_Value;
 }
+
+
+VariableStruct::VariableStruct(std::string name, NppValue value) noexcept :
+	VarName(std::move(name)),
+	ValueStruct(std::move(value))
+{
+}

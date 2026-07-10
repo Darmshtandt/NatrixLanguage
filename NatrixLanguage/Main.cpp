@@ -59,12 +59,12 @@ int main() {
 		pLexer = std::make_unique<Lexer>(code);
 		pParser = std::make_unique<Parser>(*pLexer);
 
-		pParser->GetScopeStack().CreateFunction("print", [] (const NppFuncArgs& args) {
+		pParser->GetScopeStack().Top()->CreateFunction("print", [] (const NppFuncArgs& args) {
 			if (args.size() != 1)
 				throw SyntaxError(PERROR_NUMBER_ARGUMENTS);
 
 			std::printf(args[0].ValueStruct.ToString().c_str());
-			return VariableStruct1("", NppValue());
+			return VariableStruct("", NppValue());
 			});
 
 		std::vector<Token> tokens;

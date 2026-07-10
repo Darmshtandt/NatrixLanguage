@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 ScopeStack::ScopeStack() {
-	m_SymbolTables.emplace_back();
+	m_SymbolTables.emplace_back(new SymbolTable);
 }
 
 ScopeStack::ScopeStack(ScopeStack&& stack) noexcept:
@@ -12,7 +12,7 @@ ScopeStack::ScopeStack(ScopeStack&& stack) noexcept:
 }
 
 void ScopeStack::CreateLocalScope() {
-	m_SymbolTables.emplace_back();
+	m_SymbolTables.emplace_back(new SymbolTable);
 }
 void ScopeStack::ReleaseLocalScope() {
 	if (m_SymbolTables.size() == 1)
@@ -21,14 +21,14 @@ void ScopeStack::ReleaseLocalScope() {
 }
 
 void ScopeStack::CreateVar(const std::string& name) {
-	TopScope()->CreateVar(name);
+	Top()->CreateVar(name);
 }
 void ScopeStack::CreateVar(const std::string& name, const NppValue& value) {
-	TopScope()->CreateVar(name, value);
+	Top()->CreateVar(name, value);
 }
 
 void ScopeStack::SetVarValue(const std::string& name, const NppValue& value) {
-	TopScope()->SetVarValue(name, value);
+	Top()->SetVarValue(name, value);
 }
 NppValue& ScopeStack::GetVarValue(const std::string& name) {
 	NppValue* pValue = FindVariable(name);
@@ -37,15 +37,7 @@ NppValue& ScopeStack::GetVarValue(const std::string& name) {
 	return *pValue;
 }
 
-void ScopeStack::CreateFunction(std::string name, NppFunc func) {
-	TopScope()->CreateFunction(std::move(name), std::move(func));
-}
-
-void ScopeStack::CreateFunction(std::string name, NppFuncArgs&& args, std::vector<Token>&& body) {
-	TopScope()->CreateFunction(std::move(name), std::move(args), std::move(body));
-}
-
-VariableStruct1 ScopeStack::CallFunction(const std::string& name, const NppFuncArgs& args) {
+VariableStruct ScopeStack::CallFunction(const std::string& name, const NppFuncArgs& args) {
 	NppFunc* pFunc = FindFunction(name);
 	if (!pFunc)
 		throw SyntaxError(PERROR_SYMBOL_NOT_EXISTS, ("Function \"" + name + "\" not exists").c_str());
@@ -55,7 +47,7 @@ VariableStruct1 ScopeStack::CallFunction(const std::string& name, const NppFuncA
 const std::shared_ptr<SymbolTable>& ScopeStack::GetGlobalTable() const noexcept {
 	return m_SymbolTables.front();
 }
-const std::shared_ptr<SymbolTable>& ScopeStack::TopScope() const noexcept {
+const std::shared_ptr<SymbolTable>& ScopeStack::Top() const noexcept {
 	return m_SymbolTables.back();
 }
 

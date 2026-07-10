@@ -4,7 +4,6 @@
 
 #include <list>
 #include <memory>
-#include <string>
 
 class CallStack {
 	struct CallFrame final {

@@ -1,17 +1,7 @@
 #include "SymbolTable.h"
-
-#include <cassert>
-
 #include "Errors.h"
-
+#include <cassert>
 #include <stdexcept>
-
-
-VariableStruct1::VariableStruct1(std::string name, NppValue value) noexcept :
-	VarName(std::move(name)),
-	ValueStruct(std::move(value))
-{
-}
 
 
 SymbolTable::SymbolTable(SymbolTable&& table) noexcept:
@@ -57,7 +47,7 @@ void SymbolTable::CreateFunction(std::string name, NppFuncArgs&& args, std::vect
 	assert(0);
 }
 
-VariableStruct1 SymbolTable::CallFunction(const std::string& name, const NppFuncArgs& args) {
+VariableStruct SymbolTable::CallFunction(const std::string& name, const NppFuncArgs& args) {
 	if (!m_ImportedFuncMap.contains(name))
 		throw SyntaxError(PERROR_SYMBOL_NOT_EXISTS, ("Unknown function: \"" + name + "\"").c_str());
 	return m_ImportedFuncMap[name](args);

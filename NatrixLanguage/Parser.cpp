@@ -148,10 +148,10 @@ void Parser::Func() {
 		CodeBlock();
 		m_CurrentToken = m_Lexer.SetSeek(lastSeek);
 
-		return VariableStruct1("", NppValue());
+		return VariableStruct("", NppValue());
 		};
 
-	m_ScopeStack.CreateFunction(funcName, funcBody);
+	m_ScopeStack.Top()->CreateFunction(funcName, funcBody);
 
 	Consume(TokenType::CodeBlockL);
 
@@ -280,15 +280,15 @@ void Parser::For() {
 }
 
 // ValueStruct ::= TypeValue | Symbol
-VariableStruct1 Parser::Value() {
+VariableStruct Parser::Value() {
 	if (IsTypeValue())
 		return TypeValue();
 	return Symbol();
 }
 
 // TypeValue = IntVal | FloatVal | BoolVal | StrVal
-VariableStruct1 Parser::TypeValue() {
-	VariableStruct1 value;
+VariableStruct Parser::TypeValue() {
+	VariableStruct value;
 	switch (m_CurrentToken.Type) {
 	case TokenType::IntVal:
 		value = { "", NppValue(std::stoi(m_CurrentToken.Value)) };
@@ -322,7 +322,7 @@ VariableStruct1 Parser::TypeValue() {
 }
 
 // Symbol ::= Symbol ('(' PresentArguments ')')?
-VariableStruct1 Parser::Symbol() {
+VariableStruct Parser::Symbol() {
 	const std::string name = m_CurrentToken.Value;
 	Consume(TokenType::Symbol);
 
@@ -334,7 +334,7 @@ VariableStruct1 Parser::Symbol() {
 		return m_ScopeStack.CallFunction(name, args);
 	}
 
-	return VariableStruct1(name, m_ScopeStack.GetVarValue(name));
+	return VariableStruct(name, m_ScopeStack.GetVarValue(name));
 }
 
 // PresentArguments ::= \0 | (ValueStruct (',' ValueStruct)*)
@@ -356,13 +356,13 @@ NppFuncArgs Parser::PresentArguments() {
 
 
 // Operator ::= Operator_assignment
-VariableStruct1 Parser::Operator() {
+VariableStruct Parser::Operator() {
 	return Operator_Assignment();
 }
 
 // Operator_assignment ::= Operator_rValue ('=' Operator)?
-VariableStruct1 Parser::Operator_Assignment() {
-	VariableStruct1 var = Operator_rValue();
+VariableStruct Parser::Operator_Assignment() {
+	VariableStruct var = Operator_rValue();
 	if (m_CurrentToken.Type != TokenType::Assignment)
 		return var;
 
@@ -370,13 +370,13 @@ VariableStruct1 Parser::Operator_Assignment() {
 		throw SyntaxError(PERROR_OPERATOR_NOT_APPLICABLE);
 
 	Next();
-	VariableStruct1 rValue = Operator_rValue();
+	VariableStruct rValue = Operator_rValue();
 	m_ScopeStack.SetVarValue(var.VarName, rValue.ValueStruct);
-	return VariableStruct1(var.VarName, rValue.ValueStruct);
+	return VariableStruct(var.VarName, rValue.ValueStruct);
 }
 
 // Operator_rValue = Operator_logicalor
-VariableStruct1 Parser::Operator_rValue() {
+VariableStruct Parser::Operator_rValue() {
 	return Operator_Equality();
 }
 
@@ -387,43 +387,43 @@ VariableStruct1 Parser::Operator_rValue() {
 // Operator_bitand ::= Operator_Equality ('&' Operator)*
 
 // Operator_Equality ::= Operator_ltgt (('==' | '!=') Operator)*
-VariableStruct1 Parser::Operator_Equality() {
-	VariableStruct1 left = Operator_Unary();
+VariableStruct Parser::Operator_Equality() {
+	VariableStruct left = Operator_Unary();
 	if (m_CurrentToken.Type != TokenType::Equality && m_CurrentToken.Type != TokenType::Inequality)
 		return left;
 
 	const bool isOperatorEquality = m_CurrentToken.Type == TokenType::Equality;
 	Next();
 
-	const VariableStruct1 right = Operator();
+	const VariableStruct right = Operator();
 	const bool isValuesEquals = (left.ValueStruct <=> right.ValueStruct) == 0;
 
 	if (isValuesEquals == isOperatorEquality)
-		return VariableStruct1("", NppValue(true));
-	return VariableStruct1("", NppValue(false));
+		return VariableStruct("", NppValue(true));
+	return VariableStruct("", NppValue(false));
 }
 
 // Operator_ltgt ::= Operator_bitshift
 // Operator_bitshift ::= Operator_unary
 
 // Operator_unary ::= Operator_MultDivMod (('+' | '-') Operator)*
-VariableStruct1 Parser::Operator_Unary() {
-	VariableStruct1 left = Operator_MultDivMod();
+VariableStruct Parser::Operator_Unary() {
+	VariableStruct left = Operator_MultDivMod();
 	if (m_CurrentToken.Type != TokenType::Add && m_CurrentToken.Type != TokenType::Sub)
 		return left;
 
 	const bool isAdd = m_CurrentToken.Type == TokenType::Add;
 	Next();
 
-	const VariableStruct1 right = Operator();
+	const VariableStruct right = Operator();
 	if (isAdd)
-		return VariableStruct1("", left.ValueStruct + right.ValueStruct);
-	return VariableStruct1("", left.ValueStruct - right.ValueStruct);
+		return VariableStruct("", left.ValueStruct + right.ValueStruct);
+	return VariableStruct("", left.ValueStruct - right.ValueStruct);
 }
 
 // Operator_MultDivMod ::= Operator_Prefix (('*' | '/' | '%') Operator)*
-VariableStruct1 Parser::Operator_MultDivMod() {
-	VariableStruct1 var = Operator_Prefix();
+VariableStruct Parser::Operator_MultDivMod() {
+	VariableStruct var = Operator_Prefix();
 
 	switch (m_CurrentToken.Type) {
 	case TokenType::Mult:
@@ -446,7 +446,7 @@ VariableStruct1 Parser::Operator_MultDivMod() {
 }
 
 // Operator_Prefix ::= ('++' | '--' | '+' | '-' | '!' | '~')? Operator_Primary
-VariableStruct1 Parser::Operator_Prefix() {
+VariableStruct Parser::Operator_Prefix() {
 	bool hasPrefix = false;
 	bool isRequiredVarName = false;
 
@@ -468,7 +468,7 @@ VariableStruct1 Parser::Operator_Prefix() {
 
 	const TokenType op = m_CurrentToken.Type;
 	Next();
-	VariableStruct1 var = Operator_Primary();
+	VariableStruct var = Operator_Primary();
 
 	if (isRequiredVarName && var.VarName.empty())
 		throw SyntaxError(PERROR_CANNOT_TO_RVALUE);
@@ -502,15 +502,15 @@ VariableStruct1 Parser::Operator_Prefix() {
 }
 
 // Operator_Primary ::= Value | '(' Operator ')' | Operator ('++' | '--')
-VariableStruct1 Parser::Operator_Primary() {
+VariableStruct Parser::Operator_Primary() {
 	if (m_CurrentToken.Type == TokenType::BracketL) {
 		Next();
-		const VariableStruct1 result = Operator();
+		const VariableStruct result = Operator();
 		Consume(TokenType::BracketR);
 		return result;
 	}
 
-	VariableStruct1 var = Value();
+	VariableStruct var = Value();
 	if (m_CurrentToken.Type != TokenType::Inc && m_CurrentToken.Type != TokenType::Dec)
 		return var;
 

@@ -1,21 +1,6 @@
 #pragma once
 
-#include "ValueStruct.h"
-#include <functional>
-#include <memory>
-
-class ScopeStack;
-
-using NppFuncArgs = std::vector<VariableStruct>;
-using NppFunc = std::function<VariableStruct(const NppFuncArgs&)>;
-
-
-struct FuncStruct {
-	std::shared_ptr<ScopeStack> ScopeStack;
-	NppFuncArgs Args;
-	size_t FuncSeek;
-};
-
+#include "FuncStruct.h"
 
 class SymbolTable {
 public:
@@ -38,3 +23,5 @@ private:
 	std::unordered_map<std::string, FuncStruct> m_FuncMap;
 	std::unordered_map<std::string, NppFunc> m_ImportedFuncMap;
 };
+
+using SharedSymbolTable = std::shared_ptr<SymbolTable>;
