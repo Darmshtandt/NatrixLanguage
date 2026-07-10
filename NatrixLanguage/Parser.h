@@ -2,6 +2,7 @@
 
 #include "Lexer.h"
 #include "ScopeStack.h"
+#include "ScopeTree.h"
 
 class Parser {
 public:
@@ -41,11 +42,13 @@ public:
 
 	TextPosition GetTextPosition() const noexcept;
 	ScopeStack& GetScopeStack() noexcept;
+	ScopeTree& GetScopeTree() noexcept;
 
 private:
 	Lexer m_Lexer;
 	Token m_CurrentToken;
 	ScopeStack m_ScopeStack;
+	ScopeTree m_ScopeTree;
 
 private:
 	void Consume(TokenType type);

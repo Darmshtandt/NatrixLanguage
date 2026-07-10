@@ -7,7 +7,8 @@
 
 Parser::Parser(const Lexer& lexer) :
 	m_Lexer(lexer),
-	m_CurrentToken(m_Lexer.GetNextToken())
+	m_CurrentToken(m_Lexer.GetNextToken()),
+	m_ScopeTree(nullptr)
 {
 }
 
@@ -553,4 +554,8 @@ TextPosition Parser::GetTextPosition() const noexcept {
 
 ScopeStack& Parser::GetScopeStack() noexcept {
 	return m_ScopeStack;
+}
+
+ScopeTree& Parser::GetScopeTree() noexcept {
+	return m_ScopeTree;
 }
