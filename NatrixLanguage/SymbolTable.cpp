@@ -53,8 +53,8 @@ VariableStruct SymbolTable::CallFunction(const std::string& name, const NppFuncA
 	return m_ImportedFuncMap[name](args);
 }
 
-NppFunc* SymbolTable::GetFunctionPtr(const std::string& name) {
+NppFunc SymbolTable::GetFunction(const std::string& name) {
 	if (!m_ImportedFuncMap.contains(name))
 		return nullptr;
-	return &m_ImportedFuncMap[name];
+	return m_ImportedFuncMap[name];
 }

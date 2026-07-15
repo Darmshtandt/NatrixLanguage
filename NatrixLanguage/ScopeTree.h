@@ -25,5 +25,5 @@ private:
 
 private:
 	NppValue* FindVariable(const std::string& name) noexcept;
-	NppFunc* FindFunction(const std::string& name) noexcept;
+	NppFunc FindFunction(const std::string& name) noexcept;
 };

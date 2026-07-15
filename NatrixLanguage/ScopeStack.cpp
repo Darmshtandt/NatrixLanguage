@@ -38,10 +38,10 @@ NppValue& ScopeStack::GetVarValue(const std::string& name) {
 }
 
 VariableStruct ScopeStack::CallFunction(const std::string& name, const NppFuncArgs& args) {
-	NppFunc* pFunc = FindFunction(name);
-	if (!pFunc)
+	NppFunc func = FindFunction(name);
+	if (!func)
 		throw SyntaxError(PERROR_SYMBOL_NOT_EXISTS, ("Function \"" + name + "\" not exists").c_str());
-	return (*pFunc)(args);
+	return func(args);
 }
 
 const std::shared_ptr<SymbolTable>& ScopeStack::GetGlobalTable() const noexcept {
@@ -60,11 +60,11 @@ NppValue* ScopeStack::FindVariable(const std::string& name) noexcept {
 	return nullptr;
 }
 
-NppFunc* ScopeStack::FindFunction(const std::string& name) noexcept {
+NppFunc ScopeStack::FindFunction(const std::string& name) noexcept {
 	for (auto it = m_SymbolTables.rbegin(); it != m_SymbolTables.rend(); ++it) {
-		NppFunc* pFunc = (*it)->GetFunctionPtr(name);
-		if (pFunc)
-			return pFunc;
+		NppFunc func = (*it)->GetFunction(name);
+		if (func)
+			return func;
 	}
 	return nullptr;
 }

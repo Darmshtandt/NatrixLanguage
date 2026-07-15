@@ -16,7 +16,7 @@ public:
 	void CreateFunction(std::string name, NppFuncArgs&& args, std::vector<Token>&& body);
 
 	VariableStruct CallFunction(const std::string& name, const NppFuncArgs& args);
-	NppFunc* GetFunctionPtr(const std::string& name);
+	NppFunc GetFunction(const std::string& name);
 
 private:
 	std::unordered_map<std::string, NppValue> m_VarMap;

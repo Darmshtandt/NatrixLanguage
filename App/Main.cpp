@@ -3,9 +3,10 @@
 #include <memory>
 #include <sstream>
 
-#include "Lexer.h"
-#include "Parser.h"
-#include "Errors.h"
+#include <Lexer.h>
+#include <Parser.h>
+#include <Errors.h>
+#include <Natrix.h>
 
 /*
 ? - 0 or 1
@@ -42,7 +43,32 @@ Func ::= 'func' Symbol '(' Arguments ')' CodeBlock
 Return ::= 'return' ValueStruct ';'
 */
 
+[[nodiscard]] static std::string ExecuteCode(std::string code) {
+	std::ostringstream ss;
+	Natrix n;
+	n.SetOutputStream(&ss);
+	n.Interpret(std::move(code));
+	return ss.str();
+}
+
 int main() {
+	std::string a = ExecuteCode(R"(
+				func Fib() {
+					for (var i = 0; i != 4; ++i) {
+						print("4\n");
+					}
+				}
+
+				Fib()
+				)");
+
+	std::printf(a.c_str());
+	assert(a == "4\n4\n4\n4\n");
+	getchar();
+	return 0;
+}
+
+int mmain() {
 	std::unique_ptr<Lexer> pLexer;
 	std::unique_ptr<Parser> pParser;
 

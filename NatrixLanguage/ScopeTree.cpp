@@ -21,7 +21,7 @@ NppValue& ScopeTree::GetVarValue(const std::string& name) {
 }
 
 VariableStruct ScopeTree::CallFunction(const std::string& name, const NppFuncArgs& args) {
-	NppFunc* func = FindFunction(name);
+	NppFunc func = FindFunction(name);
 	if (!func)
 		throw SyntaxError(PERROR_UNKOWN_IDENTIFIER);
 	return func(args);
@@ -53,8 +53,8 @@ NppValue* ScopeTree::FindVariable(const std::string& name) noexcept {
 	return nullptr;
 }
 
-NppFunc* ScopeTree::FindFunction(const std::string& name) noexcept {
-	NppFunc* func = m_Table->GetFunctionPtr(name);
+NppFunc ScopeTree::FindFunction(const std::string& name) noexcept {
+	NppFunc func = m_Table->GetFunction(name);
 	if (func)
 		return func;
 	if (m_pParent)
